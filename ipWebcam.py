@@ -11,6 +11,11 @@ class Orientation(enum.Enum):
     AntiPortrait = 'upsidedown_portrait'
 
 
+class State(enum.Enum):
+    ON = 'on'
+    OFF = 'off'
+
+
 class IPWebcam:
     def __init__(self, ip, port, username='', password=''):
         self.ip = ip
@@ -20,6 +25,7 @@ class IPWebcam:
 
         self.base_url = f'http://{self.username}:{self.password}@{self.ip}:{self.port}/'
         # print(self.base_url)
+        res = requests.post(self.base_url)
 
     def getCurrentStatusVal(self):
         sta_url = self.base_url + 'status.json'
@@ -55,24 +61,33 @@ class IPWebcam:
             return Orientation.AntiLandscape
 
     def setOrientation(self, orientation: Orientation):
-        post_url = self.base_url + 'settings/orientation?set='
-        res = requests.post(post_url + orientation.value)
-        if res.status_code != 200:
-            print('Not OK')
+        if orientation not in Orientation:
+            raise AttributeError('Invalid Orientation')
+
+        post_url = self.base_url + 'settings/orientation?set=' + orientation.value
+        res = requests.post(post_url)
+        if res.status_code != 200:  # not OK
+            raise RuntimeError("Couldn't resolve request")
 
     def autoOrientation(self):
         self.setOrientation(self.getOrientation())
 
+    def Torch(self, state: State):
+        if state == State.ON:
+            post_url = self.base_url + 'enabletorch'
+        elif state == State.OFF:
+            post_url = self.base_url + 'disabletorch'
+        else:
+            raise AttributeError('Invalid State')
 
-ip = '192.168.0.104'
-port = '8080'
-cam = IPWebcam(ip, port)
-# cam.getCurrentStatusVal()
-# cam.getAvailStatusVals()
-# cam.getSensorData()
+        res = requests.post(post_url)
+        if res.status_code != 200:  # not OK
+            raise RuntimeError("Couldn't resolve request")
+    
 
-# print(cam.getOrientation())
-# cam.setOrientation(orientation=Orientation.Landscape)
+if __name__ == "__main__":
+    ip = '192.168.0.104'
+    port = '8080'
+    cam = IPWebcam(ip, port)
 
-while True:
-    cam.setOrientation(cam.getOrientation())
+    cam.Torch(state=State.OFF)
