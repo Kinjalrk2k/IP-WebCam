@@ -1,7 +1,10 @@
 import requests
-import urllib.request
+import urllib
 import json
 import enum
+import cv2
+import numpy as np
+from PIL import Image
 
 
 class Orientation(enum.Enum):
@@ -83,11 +86,21 @@ class IPWebcam:
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
             raise RuntimeError("Couldn't resolve request")
-    
+
+    def getBrigthness(self):
+        photo_url = self.base_url + 'video'
+
+        vcap = cv2.VideoCapture(photo_url)
+        _, image = vcap.read()
+
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        brithness_val = hsv[..., 2].mean()
+        # print(brithness_val)
+
 
 if __name__ == "__main__":
     ip = '192.168.0.104'
     port = '8080'
     cam = IPWebcam(ip, port)
 
-    cam.Torch(state=State.OFF)
+    
