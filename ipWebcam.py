@@ -5,6 +5,7 @@ import enum
 import cv2
 import numpy as np
 from PIL import Image
+import time
 
 
 class Orientation(enum.Enum):
@@ -28,7 +29,10 @@ class IPWebcam:
 
         self.base_url = f'http://{self.username}:{self.password}@{self.ip}:{self.port}/'
         # print(self.base_url)
-        res = requests.post(self.base_url)
+        try:
+            res = requests.get(self.base_url).status_code
+        except:
+            raise RuntimeError("Couldn't resolve request")
 
     def getCurrentStatusVal(self):
         sta_url = self.base_url + 'status.json'
@@ -70,12 +74,12 @@ class IPWebcam:
         post_url = self.base_url + 'settings/orientation?set=' + orientation.value
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve request")
+            raise RuntimeError("Couldn't resolve connection request")
 
     def autoOrientation(self):
         self.setOrientation(self.getOrientation())
 
-    def Torch(self, state: State):
+    def torch(self, state: State):
         if state == State.ON:
             post_url = self.base_url + 'enabletorch'
         elif state == State.OFF:
@@ -97,10 +101,28 @@ class IPWebcam:
         brithness_val = hsv[..., 2].mean()
         # print(brithness_val)
 
+    def focus(self, state: State):
+        if state == State.ON:
+            post_url = self.base_url + 'focus'
+        elif state == State.OFF:
+            post_url = self.base_url + 'nofocus'
+        else:
+            raise AttributeError('Invalid State')
+
+        res = requests.post(post_url)
+        if res.status_code != 200:  # not OK
+            raise RuntimeError("Couldn't resolve request")
+
+    def holdFocus(self, hold_duration=2):  # hold_duration in seconds
+        self.focus(state=State.ON)
+        time.sleep(hold_duration)
+        self.focus(state=State.OFF)
+
 
 if __name__ == "__main__":
-    ip = '192.168.0.104'
+    # help(IPWebcam)
+
+    ip = '192.168.0.103'
     port = '8080'
     cam = IPWebcam(ip, port)
-
-    
+    cam.focus(state=State.OFF)
