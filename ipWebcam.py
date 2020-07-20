@@ -49,8 +49,8 @@ class IPWebcam:
     def getSensorData(self):
         sen_url = self.base_url + 'sensors.json'
         res = requests.get(sen_url)
-        self.curr_sensor_data = res.json()
-        # print(self.curr_sensor_data)
+        self.curr_status_data = res.json()
+        # print(self.curr_status_data)
 
     def getOrientation(self):
         self.getSensorData()
@@ -118,11 +118,62 @@ class IPWebcam:
         time.sleep(hold_duration)
         self.focus(state=State.OFF)
 
+    def zoomIn(self):
+        self.getAvailStatusVals()
+        self.getCurrentStatusVal()
+
+        avail_zoom_data = self.avail_status_data['zoom']
+        curr_zoom_data = self.curr_status_data['zoom']
+        try:
+            curr_zoom_idx = avail_zoom_data.index(curr_zoom_data)
+        except ValueError:
+            raise AttributeError('Invalid zoom state')
+
+        next_zoom_idx = curr_zoom_idx + 1
+        if next_zoom_idx > len(avail_zoom_data) - 1:
+            raise ValueError("Already in maximum zoom level")
+        post_url = self.base_url + 'ptz?zoom=' + str(next_zoom_idx)
+
+        res = requests.post(post_url)
+        if res.status_code != 200:  # not OK
+            raise RuntimeError("Couldn't resolve request")
+
+    def zoomOut(self):
+        self.getAvailStatusVals()
+        self.getCurrentStatusVal()
+
+        avail_zoom_data = self.avail_status_data['zoom']
+        curr_zoom_data = self.curr_status_data['zoom']
+        try:
+            curr_zoom_idx = avail_zoom_data.index(curr_zoom_data)
+        except ValueError:
+            raise AttributeError('Invalid zoom state')
+
+        next_zoom_idx = curr_zoom_idx - 1
+        if next_zoom_idx < 0:
+            raise ValueError("Already in minimum zoom level")
+        post_url = self.base_url + 'ptz?zoom=' + str(next_zoom_idx)
+
+        res = requests.post(post_url)
+        if res.status_code != 200:  # not OK
+            raise RuntimeError("Couldn't resolve request")
+
+    
+    def zoomSet(self, zoom_value):
+        self.getAvailStatusVals()
+
+        avail_zoom_data = self.avail_status_data['zoom']
+        if zoom_value not in avail_zoom_data:
+            raise AssertionError('Invalid zoom level')
+        
+        zoom_idx = avail_zoom_data.index(zoom_value)
+        post_url = self.base_url + 'ptz?zoom=' + str(zoom_idx)
+        if res.status_code != 200:  # not OK
+            raise RuntimeError("Couldn't resolve request")
 
 if __name__ == "__main__":
     # help(IPWebcam)
 
-    ip = '192.168.0.103'
+    ip = '192.168.0.104'
     port = '8080'
     cam = IPWebcam(ip, port)
-    cam.focus(state=State.OFF)
