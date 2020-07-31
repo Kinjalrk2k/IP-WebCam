@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from PIL import Image
 import time
+import warnings
 
 
 class Orientation(enum.Enum):
@@ -32,7 +33,9 @@ class IPWebcam:
         try:
             res = requests.get(self.base_url).status_code
         except:
-            raise RuntimeError("Couldn't resolve request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve request")
 
     def getCurrentStatusVal(self):
         sta_url = self.base_url + 'status.json'
@@ -69,12 +72,15 @@ class IPWebcam:
 
     def setOrientation(self, orientation: Orientation):
         if orientation not in Orientation:
-            raise AttributeError('Invalid Orientation')
+            warnings.warn('Invalid Orientation', RuntimeWarning)
+            # raise AttributeError('Invalid Orientation')
 
         post_url = self.base_url + 'settings/orientation?set=' + orientation.value
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve connection request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve connection request")
 
     def autoOrientation(self):
         self.setOrientation(self.getOrientation())
@@ -89,7 +95,9 @@ class IPWebcam:
 
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve request")
 
     def getBrigthness(self):
         photo_url = self.base_url + 'video'
@@ -107,11 +115,14 @@ class IPWebcam:
         elif state == State.OFF:
             post_url = self.base_url + 'nofocus'
         else:
-            raise AttributeError('Invalid State')
+            warnings.warn('Invalid State', RuntimeWarning)
+            # raise AttributeError('Invalid State')
 
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve request")
 
     def holdFocus(self, hold_duration=2):  # hold_duration in seconds
         self.focus(state=State.ON)
@@ -127,16 +138,20 @@ class IPWebcam:
         try:
             curr_zoom_idx = avail_zoom_data.index(curr_zoom_data)
         except ValueError:
-            raise AttributeError('Invalid zoom state')
+            warnings.warn('Invalid zoom state', RuntimeWarning)
+            # raise AttributeError('Invalid zoom state')
 
         next_zoom_idx = curr_zoom_idx + 1
         if next_zoom_idx > len(avail_zoom_data) - 1:
-            raise ValueError("Already in maximum zoom level")
+            warnings.warn("Already in maximum zoom level", RuntimeWarning)
+            # raise ValueError("Already in maximum zoom level")
         post_url = self.base_url + 'ptz?zoom=' + str(next_zoom_idx)
 
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve request")
 
     def zoomOut(self):
         self.getAvailStatusVals()
@@ -147,29 +162,36 @@ class IPWebcam:
         try:
             curr_zoom_idx = avail_zoom_data.index(curr_zoom_data)
         except ValueError:
-            raise AttributeError('Invalid zoom state')
+            warnings.warn('Invalid zoom state', RuntimeWarning)
+            # raise AttributeError('Invalid zoom state')
 
         next_zoom_idx = curr_zoom_idx - 1
         if next_zoom_idx < 0:
-            raise ValueError("Already in minimum zoom level")
+            warnings.warn("Already in minimum zoom level", RuntimeWarning)
+            # raise ValueError("Already in minimum zoom level")
         post_url = self.base_url + 'ptz?zoom=' + str(next_zoom_idx)
 
         res = requests.post(post_url)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve request")
 
-    
     def zoomSet(self, zoom_value):
         self.getAvailStatusVals()
 
         avail_zoom_data = self.avail_status_data['zoom']
         if zoom_value not in avail_zoom_data:
-            raise AssertionError('Invalid zoom level')
-        
+            warnings.warn('Invalid zoom level', RuntimeWarning)
+            # raise AssertionError('Invalid zoom level')
+
         zoom_idx = avail_zoom_data.index(zoom_value)
         post_url = self.base_url + 'ptz?zoom=' + str(zoom_idx)
         if res.status_code != 200:  # not OK
-            raise RuntimeError("Couldn't resolve request")
+            warnings.warn("Couldn't resolve connection request",
+                          RuntimeWarning)
+            # raise RuntimeError("Couldn't resolve request")
+
 
 if __name__ == "__main__":
     # help(IPWebcam)
